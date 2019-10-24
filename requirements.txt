@@ -18,7 +18,7 @@ itsdangerous==1.1.0
 Jinja2==2.10.1
 jupyter-core==4.5.0
 MarkupSafe==1.1.1
-math==3.6
+math
 nbformat==4.4.0
 numpy==1.16.4
 pandas==0.24.2
