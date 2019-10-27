@@ -23,6 +23,7 @@ objs2 = cannondata.columns
 objs2_noname = cannondata.columns[1:,]
 ################## Dash layout ###################
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+server = app.server
 app.title = 'Task 6 - Visualization'
 
 app.layout = html.Div(children=[
