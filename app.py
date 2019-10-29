@@ -1,4 +1,3 @@
-# cd OneDrive\Stevens\Research\ART-002\python
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -17,13 +16,12 @@ y2 = [random.random() for _ in range(initial_MC_size)]
 target_color = 'red'
 objs1 = {'Range (mi)', 'Cost (M$)', 'Mission Success (%)'}
 objslist = ['Range (mi)', 'Cost (M$)', 'Mission Success (%)']
-cannondata = pd.read_csv("missiledata_complete.csv") # MAY CAUSE PROBLEM WITH DIRECTORY
-#cannondata = pd.read_csv("/home/hoffenson/mysite/missiledata_complete.csv") # FOR PYTHONANYWHERE!
+cannondata = pd.read_csv("missiledata_complete.csv")
 objs2 = cannondata.columns
 objs2_noname = cannondata.columns[1:,]
 ################## Dash layout ###################
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-server = app.server
+server = app.server # FOR HEROKU
 app.title = 'Task 6 - Visualization'
 
 app.layout = html.Div(children=[
@@ -85,7 +83,7 @@ app.layout = html.Div(children=[
             html.Div(children=[
                 dcc.Markdown('**System capabilities**'),
                 dcc.Graph(id='basic-outcomes',config={'displayModeBar': False})
-            ], style={'width': '375px', 'display': 'inline-block', 'vertical-align': 'top'}),
+            ], style={'width': '375px', 'display': 'inline-block', 'vertical-align': 'top'}), #, 'height':'300px'
 
         ]),
 
@@ -344,6 +342,11 @@ def update_graph(cannon_diameter,cannon_power,barrel_length):
     barrel_string = draw_cannon(cannon_diameter,cannon_power,barrel_length)[0]
     power_string = draw_cannon(cannon_diameter,cannon_power,barrel_length)[1]
 
+    # BAR CHART PARAMETERS:
+    attslist = ['Unit cost', 'Projectile mass', 'System mass', 'Accuracy', 'Range']
+    barcolors = ['indianred',] * 5
+    barcolors[4] = 'mediumaquamarine' #'palegreen'
+
     return [
         # System drawing:
         {'data': [],
@@ -367,8 +370,9 @@ def update_graph(cannon_diameter,cannon_power,barrel_length):
                 {'type': 'path', 'path':power_string, 'fillcolor': 'black'},   # Base
                 {'type': 'path', 'path':barrel_string, 'fillcolor': 'black'}   # Barrel
             ],
+            'height': 160,
             'margin': {
-                    'l': 0, 'b': 300, 't': 0, 'r': 0
+                    'l': 0, 'b': 0, 't': 0, 'r': 0
             }
         }},
         # Outcome bar charts:
@@ -376,6 +380,7 @@ def update_graph(cannon_diameter,cannon_power,barrel_length):
             x=[norm_ucost,norm_pmass,norm_smass,norm_acc,norm_dist],
             y=['Unit cost', 'Projectile mass', 'System mass', 'Accuracy', 'Range'],
             # hovertext = ['${} M'.format(float('%.3g' % unitcost)),'b','c','d','e'],
+            # width = [0.7,]*5,
             hoverinfo="none",
             text=['${} M'.format(float('%.3g' % unitcost)),
                 '{} lb'.format(float('%.3g' % projectilemass)),
@@ -387,15 +392,22 @@ def update_graph(cannon_diameter,cannon_power,barrel_length):
                 size=16,
                 color='black'
             ),
-            marker_color = 'lightslategray',
+            marker_color = barcolors,
             marker_line_color='black',
             marker_line_width=0.5,
             orientation='h')],
         'layout': {
             'xaxis': dict(
                 type='log',
-#                range = [0,1]
+                range = [-4,0],
+                showticklabels = False,
+                #'showgrid': False,
+                #'zeroline': False,
             ),
+            'yaxis': dict(
+                zeroline = True
+            ),
+            'height': 350,
             'margin': {
                     'l': 100, 'b': 100, 't': 0, 'r': 0
             }
