@@ -1,3 +1,4 @@
+# cd OneDrive\Stevens\Research\ART-002\python
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -16,7 +17,8 @@ y2 = [random.random() for _ in range(initial_MC_size)]
 target_color = 'red'
 objs1 = {'Range (mi)', 'Cost (M$)', 'Mission Success (%)'}
 objslist = ['Range (mi)', 'Cost (M$)', 'Mission Success (%)']
-cannondata = pd.read_csv("missiledata_complete.csv")
+cannondata = pd.read_csv("missiledata_complete.csv") # MAY CAUSE PROBLEM WITH DIRECTORY
+#cannondata = pd.read_csv("/home/hoffenson/mysite/missiledata_complete.csv") # FOR PYTHONANYWHERE
 objs2 = cannondata.columns
 objs2_noname = cannondata.columns[1:,]
 ################## Dash layout ###################
@@ -31,7 +33,7 @@ app.layout = html.Div(children=[
     dcc.Tabs(id="tabs", children = [
 
         ###################### TAB 1 LAYOUT ########################
-        dcc.Tab(label='System capability design', children = [
+        dcc.Tab(label='Design explorer', children = [
         #Inputs: caliber, power, barrel length, number of cannons, smart/dumb
         #Parameters, air pressure, target distance, wind
         #Outputs: range, accuracy, system weight, projectile weight, cost, blast radius??
@@ -43,17 +45,18 @@ app.layout = html.Div(children=[
                 dcc.Input(
                     id='cannon-power',
                     value=250,
-                    step=25,
+                    # step=25,
                     type='number',
                     min=0,
-                    max=1000
+                    max=1000,
+                    # updatemode='keypress'
                 ),
 
                 html.Label('Caliber (mm)'),
                 dcc.Input(
                     id='cannon-diameter',
                     value=150,
-                    step=5,
+                    # step=5,
                     type='number',
                     min=5,
                     max=400
@@ -63,7 +66,7 @@ app.layout = html.Div(children=[
                 dcc.Input(
                     id='barrel-length',
                     value=7,
-                    step=0.2,
+                    step=0.1,
                     type='number',
                     min=3,
                     max=14
@@ -88,7 +91,7 @@ app.layout = html.Div(children=[
         ]),
 
         ###################### TAB 2 LAYOUT ########################
-        dcc.Tab(label='Mission success', children = [
+        dcc.Tab(label='Mission explorer', children = [
             html.Div([
 
                 dcc.Markdown('**Input mission attributes here**'),
@@ -151,7 +154,7 @@ app.layout = html.Div(children=[
         ]),
 
         ###################### TAB 3 LAYOUT ########################
-        dcc.Tab(label='Mission tradeoffs', children = [
+        dcc.Tab(label='Tradeoff explorer', children = [
             # html.Div(children = 'This is a placeholder for an interactive visualization of Pareto optimal designs')
             html.Div([
                 html.Div([
@@ -181,8 +184,8 @@ app.layout = html.Div(children=[
                     dcc.Graph(
                         id='pareto-scatter',
                         config={'displayModeBar': False},
-                        hoverData={'points':[{'customdata':'none'}]}
-                        # hoverData={'points':[{'customdata':'Hover over a point'}]}
+                        # hoverData={'points':[{'customdata':'none'}]}
+                        hoverData={'points':[{'customdata':'Hover over a point'}]}
     #                    hoverData={'points': [{'customdata': 'M777A2'}]}#cannondata.Name[0]}]}  ##### PROBABLY DOESNT WORK!!!!!!!!!!!!!!!!!!!!!!!!!
                     )
                 ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 20'}),
@@ -196,7 +199,7 @@ app.layout = html.Div(children=[
         ]),
 
         ###################### TAB 4 LAYOUT ########################
-        dcc.Tab(label='Deployed system comparison',children=[
+        dcc.Tab(label='Deployed systems',children=[
             html.Div([
 
                 html.Div([
@@ -320,6 +323,13 @@ def update_graph(cannon_diameter,cannon_power,barrel_length):
     # Kinetic energy = (1/2)*m*v^2 -> v = sqrt(2*KE/m)
     maxspeed = math.sqrt(2*cannon_power/(cannon_diameter/50)) # ft/s; assumes 1s of acceleration, 0.2 lb/cm of diameter
     maxdistance = (maxspeed**2)*math.sin(math.pi/2)/9.8
+    # v_ftpersec = math.sqrt(2*cannon_power/(cannon_diameter/50)) # ft/s; assumes 1s of acceleration, 0.2 lb/cm of diameter
+    # v = v_ftpersec/3.28084
+    # # maxdistance = -343.6*v**5 + 442.1*v**4 + 1075*v**3 - 2512*v**2 + 4417*v + 11480
+    # maxdistance = -1.471e-10*v**5 + 4.35e-07*v**4 - 0.0004653*v**3 + 0.1992*v**2 - 6.019*v + 34.03
+    # maxdistance_m = -1.4706E-10*v**5 + 4.3500E-07*v**4 - 4.6531E-04*v**3 + 1.9917E-01*v**2 - 6.0187E+00*v + 3.4027E+01
+    # maxdistance = maxdistance_m/1609.34
+    # print(maxdistance)
     projectile_color = 'blue'
     accuracy = 10*cannon_diameter/(barrel_length*(cannon_power+0.001))
     sysmass = cannon_power*cannon_diameter*barrel_length/25000
@@ -443,40 +453,57 @@ def update_MC_graph(MC_size,max_dist,prob_misfire,cannon_diameter,cannon_power,n
     x2m = mission[3]
     y2m = mission[4]
 
-    projectile_color = 'blue'
-    target_color = 'red'
+    cannon_color = 'blue'
 
     return [
-        ['{}% hits'.format(float('%.3g' % prob_hit))],
+        ['{}% Hits'.format(float('%.3g' % prob_hit))],
         {'data': [
-           {
-               'x': [0],
-               'y': [0],
-               'text': ['Launch point'],
-               'name': 'Cannon',
-               'mode': 'markers',
-               'marker': {
-                   'size': cannondiametermarker,
-                   'color':projectile_color,
-                   'line': {'color': 'grey', 'width': cannonpowermarker}
-               }
-           },
-           {
+            {
+                'x': [0],
+                'y': [0],
+                'name': 'Target',
+                'mode': 'markers',
+                'marker': {
+                   'size': 12,
+                   'color': 'white',
+                   'line': {'color': 'red', 'width': 2}
+                },
+               'hovertext': 'Target',
+               'hoverinfo': 'text',
+            },
+            {
+                'x': [0],
+                'y': [0],
+                'name': 'Target',
+                'mode': 'markers',
+                'hoverinfo': 'none',
+                'marker': {
+                    'size': 4,
+                    'color': 'white',
+                    'line': {'color': 'red', 'width': 2}
+                },
+                'showlegend': False
+            },
+            {
                'x': [i for i in x2h],
                'y': [i for i in y2h],
-               'text': ['Targets hit'],
+               'text': ['Cannon (Hit)'],
+               'hovertext': 'Hit!',
+               'hoverinfo': 'text',
                'name': 'Hits',
                'mode': 'markers',
-               'marker': {'size': 8,'color':target_color,'opacity':0.65}
-           },
-          {
+               'marker': {'size': 8,'color':cannon_color,'opacity':0.65}
+            },
+            {
               'x': [i for i in x2m],
               'y': [i for i in y2m],
-              'text': ['Targets missed'],
+              'text': ['Cannon (Miss)'],
               'name': 'Misses',
+             'hovertext': 'Miss!',
+             'hoverinfo': 'text',
               'mode': 'markers',
-              'marker': {'size': 8,'color':target_color,'opacity':0.2}
-          }
+              'marker': {'size': 8,'color':cannon_color,'opacity':0.2}
+            },
         ],
         'layout': go.Layout(
             xaxis = {'showgrid':False,'zeroline':False,'showticklabels':False,'range':[-max_dist,max_dist],'showline':True,'mirror':True},
@@ -484,7 +511,18 @@ def update_MC_graph(MC_size,max_dist,prob_misfire,cannon_diameter,cannon_power,n
 #            height=500,
 #            width=600,
             margin=go.layout.Margin(l=40, r=40, b=30, t=30, pad=0),
-        )}
+            hovermode='closest'
+            ),
+            # go.layout.Image(
+            #     source = "Target.jpg",
+            #     xref = 0,
+            #     yref = 0,
+            #     sizex = 2,
+            #     sizey = 2,
+            #     sizing = "stretch",
+            #     layer = "above"
+            # )
+        }
     ]
 
 ################## Dash update logic for Tab 3 ##################
@@ -519,9 +557,9 @@ def update_graph(xaxis_pareto_id, yaxis_pareto_id,cannon_diameter,cannon_power,b
     xopt_len = []
     # Vars = {cannon_diameter,cannon_power,barrel_length}
     x0 = [150,250,7]
-    ulb = ((5,400),(0,1000),(3,14))
+    ulb = ((50,400),(25,1000),(3,14))
     for i in range(numparetos):
-        funlist = ['obj_range(x[0],x[1])','obj_cost(x[0],x[1],x[2])','obj_successrate(x[0],x[1],20,5,500)']
+        # funlist = ['obj_range(x[0],x[1])','obj_cost(x[0],x[1],x[2])','obj_successrate(x[0],x[1],20,5,500)']
         def optcon(x):
             cannon_diameter = x[0]
             cannon_power = x[1]
@@ -542,15 +580,15 @@ def update_graph(xaxis_pareto_id, yaxis_pareto_id,cannon_diameter,cannon_power,b
 #        coneps = (i/(numparetos-1))*2041
         # constr = optimize.NonlinearConstraint(optcon,coneps,10000)
         if xaxis_pareto_id == 'Range (mi)':
-            coneps = 1+(i/(numparetos-1))*2041
-            constr = optimize.NonlinearConstraint(optcon,coneps,3000)
+            coneps = 1+(i/(numparetos-1))*406
+            constr = optimize.NonlinearConstraint(optcon,coneps,500)
         elif xaxis_pareto_id == 'Cost (M$)':
             coneps = (i/(numparetos-1))*0.5
             constr = optimize.NonlinearConstraint(optcon,0,coneps)
         elif xaxis_pareto_id == 'Mission Success (%)':
             coneps = (i/(numparetos-1))*100
             constr = optimize.NonlinearConstraint(optcon,coneps,101)
-        optresult = optimize.minimize(optobj, x0, method='SLSQP', bounds=ulb, constraints=constr) #, options={'eps':0.05}
+        optresult = optimize.minimize(optobj, x0, method='SLSQP', bounds=ulb, constraints=constr) #, options={'eps':0.05})
         xmin = optresult.x
         xopt_diam.append(xmin[0])
         xopt_pow.append(xmin[1])
@@ -587,7 +625,8 @@ def update_graph(xaxis_pareto_id, yaxis_pareto_id,cannon_diameter,cannon_power,b
     [dash.dependencies.Input('pareto-scatter', 'hoverData')])
 def update_pareto_drawing(hoverData):
     pareto_id = hoverData['points'][0]['customdata']
-    if pareto_id == 'none':
+    # if pareto_id == 'none':
+    if isinstance(pareto_id,str)==True:
         return {
             'data': [go.Scatter(
                 x=[1],
