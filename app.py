@@ -27,7 +27,7 @@ server = app.server # FOR HEROKU
 app.title = 'Task 6 - Visualization'
 
 app.layout = html.Div(children=[
-    html.H3('Task 6: Visualization dashboard of system capability and mission success', style={
+    html.H3('Task 6: Mission-Oriented Design and Optimization Dashboard', style={
             'textAlign': 'center', 'margin': '48px 0', 'fontFamily': 'system-ui'}),
 
     dcc.Tabs(id="tabs", children = [
